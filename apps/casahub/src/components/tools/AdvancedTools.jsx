@@ -1,111 +1,132 @@
 import React, { useState, useEffect } from 'react';
 
-export const AdvancedTools = () => {
+export const AdvancedTools = ({ toolId }) => {
     const [input, setInput] = useState('');
-    const [tool, setTool] = useState('jwt');
+    const [output, setOutput] = useState('');
+    const [error, setError] = useState('');
 
-    const decodeJwt = () => {
+    const parseJwt = () => {
         try {
             const parts = input.split('.');
-            if (parts.length !== 3) return 'Invalid JWT format';
-            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-            return JSON.stringify(payload, null, 2);
+            if (parts.length !== 3) throw new Error('Invalid JWT structure');
+            const header = JSON.parse(atob(parts[0]));
+            const payload = JSON.parse(atob(parts[1]));
+            setOutput(JSON.stringify({ header, payload }, null, 2));
+            setError('');
         } catch (e) {
-            return 'Error decoding JWT';
+            setError('JWT Error: ' + e.message);
+            setOutput('');
         }
     };
 
     const parseUrl = () => {
         try {
             const url = new URL(input);
-            return JSON.stringify({
+            const params = Object.fromEntries(new URLSearchParams(url.search));
+            const res = {
                 protocol: url.protocol,
                 host: url.host,
                 pathname: url.pathname,
-                search: url.search,
-                params: Object.fromEntries(url.searchParams),
+                params: params,
                 hash: url.hash
-            }, null, 2);
+            };
+            setOutput(JSON.stringify(res, null, 2));
+            setError('');
         } catch (e) {
-            return 'Invalid URL';
+            setError('URL Error: ' + e.message);
+            setOutput('');
         }
     };
 
     return (
         <div className="tool-content">
-            <div className="input-group">
-                <select value={tool} onChange={(e) => setTool(e.target.value)}>
-                    <option value="jwt">JWT Decoder</option>
-                    <option value="url">URL Parser</option>
-                </select>
-            </div>
             <textarea
-                placeholder={tool === 'jwt' ? 'Paste JWT here...' : 'Paste URL here...'}
+                placeholder={toolId === 'jwt-decoder' ? 'Paste JWT here...' : 'Paste URL here...'}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                rows={6}
+                rows={5}
             />
-            <div className="result-area">
-                <pre>{tool === 'jwt' ? decodeJwt() : parseUrl()}</pre>
-            </div>
+            <button className="btn" onClick={toolId === 'jwt-decoder' ? parseJwt : parseUrl} style={{ marginTop: '1rem' }}>
+                {toolId === 'jwt-decoder' ? 'Decode JWT' : 'Parse URL'}
+            </button>
+
+            {error && <div className="result-area" style={{ color: '#f87171' }}>{error}</div>}
+            {output && (
+                <div className="result-area">
+                    <pre>{output}</pre>
+                    <button className="btn btn-sm" onClick={() => navigator.clipboard.writeText(output)} style={{ marginTop: '0.5rem' }}>Copy JSON</button>
+                </div>
+            )}
         </div>
     );
 };
 
 export const Pomodoro = () => {
-    const [timeLeft, setTimeLeft] = useState(25 * 60);
-    const [mode, setMode] = useState('work');
+    const [time, setTime] = useState(1500);
     const [active, setActive] = useState(false);
+    const [type, setType] = useState('work');
 
     useEffect(() => {
-        let timer;
-        if (active && timeLeft > 0) {
-            timer = setInterval(() => setTimeLeft(t => t - 1), 1000);
-        } else if (timeLeft === 0) {
+        let interval;
+        if (active && time > 0) {
+            interval = setInterval(() => setTime(prev => prev - 1), 1000);
+        } else if (time === 0) {
             setActive(false);
-            const nextMode = mode === 'work' ? 'break' : 'work';
-            setMode(nextMode);
-            setTimeLeft(nextMode === 'work' ? 25 * 60 : 5 * 60);
-            alert(`Time for a ${nextMode}!`);
+            const sound = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3');
+            sound.play().catch(() => alert('Time is up!'));
         }
-        return () => clearInterval(timer);
-    }, [active, timeLeft, mode]);
+        return () => clearInterval(interval);
+    }, [active, time]);
+
+    const setTimer = (mins, mode) => {
+        setTime(mins * 60);
+        setType(mode);
+        setActive(false);
+    };
 
     const format = (s) => {
         const m = Math.floor(s / 60);
-        const rs = s % 60;
-        return `${m}:${rs.toString().padStart(2, '0')}`;
+        const ss = s % 60;
+        return `${m.toString().padStart(2, '0')}:${ss.toString().padStart(2, '0')}`;
     };
 
     return (
         <div className="tool-content" style={{ textAlign: 'center' }}>
-            <div style={{ color: mode === 'work' ? '#ef4444' : '#10b981', fontWeight: 'bold', textTransform: 'uppercase' }}>{mode} MODE</div>
-            <div style={{ fontSize: '3.5rem', fontWeight: '800', margin: '1rem 0' }}>{format(timeLeft)}</div>
-            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
-                <button className="btn" onClick={() => setActive(!active)}>{active ? 'Pause' : 'Start'}</button>
-                <button className="btn btn-sm" onClick={() => { setActive(false); setTimeLeft(25 * 60); setMode('work'); }}>Reset</button>
+            <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
+                <button className="btn btn-sm" style={{ background: type === 'work' ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)' }} onClick={() => setTimer(25, 'work')}>Work</button>
+                <button className="btn btn-sm" style={{ background: type === 'short' ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)' }} onClick={() => setTimer(5, 'short')}>Short Break</button>
+                <button className="btn btn-sm" style={{ background: type === 'long' ? 'var(--accent-color)' : 'rgba(255,255,255,0.05)' }} onClick={() => setTimer(15, 'long')}>Long Break</button>
+            </div>
+
+            <div style={{ fontSize: '6rem', fontWeight: '800', fontFamily: 'monospace', color: type === 'work' ? '#f87171' : '#4ade80' }}>
+                {format(time)}
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+                <button className="btn" style={{ width: '150px' }} onClick={() => setActive(!active)}>{active ? 'Pause' : 'Start'}</button>
+                <button className="btn btn-sm" onClick={() => setTimer(type === 'work' ? 25 : type === 'short' ? 5 : 15, type)}>Reset</button>
             </div>
         </div>
     );
 };
 
 export const Scratchpad = () => {
-    const [note, setNote] = useState(localStorage.getItem('casahub_note') || '');
+    const [content, setContent] = useState(localStorage.getItem('casahub_scratchpad') || '');
 
-    const save = (val) => {
-        setNote(val);
-        localStorage.setItem('casahub_note', val);
-    };
+    useEffect(() => {
+        localStorage.setItem('casahub_scratchpad', content);
+    }, [content]);
 
     return (
         <div className="tool-content">
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>Autosaves to local storage</div>
             <textarea
-                placeholder="A persistent scratchpad..."
-                value={note}
-                onChange={(e) => save(e.target.value)}
-                rows={10}
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Type anything here... it will stay even if you close the app."
+                style={{ height: '400px', fontSize: '1.1rem', lineHeight: '1.6' }}
             />
-            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>Auto-saves to local storage</div>
+            <button className="btn btn-sm" style={{ background: '#f87171', marginTop: '0.5rem' }} onClick={() => setContent('')}>Clear Pad</button>
         </div>
     );
 };

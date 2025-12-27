@@ -7,7 +7,7 @@ import ToolRenderer from './components/ToolRenderer';
 const Sidebar = ({ activeTab, setActiveTab, activeCategory, setActiveCategory, searchQuery, setSearchQuery }) => {
   return (
     <aside className="sidebar">
-      <div className="logo" onClick={() => setActiveTab('dashboard')} style={{ cursor: 'pointer' }}>
+      <div className="logo" onClick={() => { setActiveTab('dashboard'); setActiveCategory('all'); }} style={{ cursor: 'pointer' }}>
         <span>🏠</span>
         CasaHub
       </div>
@@ -54,12 +54,9 @@ const Sidebar = ({ activeTab, setActiveTab, activeCategory, setActiveCategory, s
   );
 };
 
-const Settings = () => {
-  const [darkTheme, setDarkTheme] = useState(true);
-  const [animations, setAnimations] = useState(true);
-
+const SettingsView = ({ settings, setSettings }) => {
   return (
-    <div className="view-container" style={{ animation: 'fadeIn 0.5s ease' }}>
+    <div className="view-container">
       <header className="header">
         <h1>Settings</h1>
         <p>Customize your CasaHub experience.</p>
@@ -73,7 +70,11 @@ const Settings = () => {
             <p>Use a darker color palette for the interface.</p>
           </div>
           <label className="switch">
-            <input type="checkbox" checked={darkTheme} onChange={() => setDarkTheme(!darkTheme)} />
+            <input
+              type="checkbox"
+              checked={settings.darkTheme}
+              onChange={() => setSettings(prev => ({ ...prev, darkTheme: !prev.darkTheme }))}
+            />
             <span className="slider"></span>
           </label>
         </div>
@@ -83,7 +84,11 @@ const Settings = () => {
             <p>Enable transitions and fade-in effects.</p>
           </div>
           <label className="switch">
-            <input type="checkbox" checked={animations} onChange={() => setAnimations(!animations)} />
+            <input
+              type="checkbox"
+              checked={settings.animations}
+              onChange={() => setSettings(prev => ({ ...prev, animations: !prev.animations }))}
+            />
             <span className="slider"></span>
           </label>
         </div>
@@ -96,7 +101,12 @@ const Settings = () => {
             <h4>Default Category</h4>
             <p>Page to show when the app starts.</p>
           </div>
-          <select className="search-input" style={{ width: 'auto' }}>
+          <select
+            className="search-input"
+            style={{ width: 'auto' }}
+            value={settings.defaultCategory}
+            onChange={(e) => setSettings(prev => ({ ...prev, defaultCategory: e.target.value }))}
+          >
             {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
@@ -105,20 +115,20 @@ const Settings = () => {
   );
 };
 
-const About = () => {
+const AboutView = () => {
   return (
-    <div className="view-container" style={{ animation: 'fadeIn 0.5s ease' }}>
+    <div className="view-container">
       <div className="about-hero">
         <div className="about-logo">🏠</div>
         <h1>CasaHub</h1>
         <p>The Ultimate Utility Suite for CasaOS</p>
-        <span className="about-version">v1.1.0-beta</span>
+        <span className="about-version">v1.1.0-stable</span>
       </div>
 
       <div className="settings-group">
         <h3>What is CasaHub?</h3>
         <p style={{ lineHeight: '1.6', color: 'var(--text-secondary)' }}>
-          CasaHub centralizes essential tools for your digital workspace into a high-performance web interface. Designed for CasaOS to eliminate dashboard clutter.
+          CasaHub centralizes essential tools for your digital workspace into a high-performance web interface. Designed for CasaOS to eliminate dashboard clutter and provide a seamless utility experience.
         </p>
       </div>
 
@@ -160,6 +170,32 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTool, setSelectedTool] = useState(null);
 
+  // Settings state with LocalStorage persistence
+  const [settings, setSettings] = useState(() => {
+    const saved = localStorage.getItem('casahub_settings');
+    return saved ? JSON.parse(saved) : {
+      darkTheme: true,
+      animations: true,
+      defaultCategory: 'all'
+    };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('casahub_settings', JSON.stringify(settings));
+    // Apply theme to body
+    if (settings.darkTheme) {
+      document.body.classList.remove('light-mode');
+    } else {
+      document.body.classList.add('light-mode');
+    }
+    // Apply animation control
+    if (!settings.animations) {
+      document.body.classList.add('no-animations');
+    } else {
+      document.body.classList.remove('no-animations');
+    }
+  }, [settings]);
+
   const filteredTools = useMemo(() => {
     return TOOLS.filter(tool => {
       const matchesCategory = activeCategory === 'all' || tool.category === activeCategory;
@@ -179,7 +215,7 @@ function App() {
   }, []);
 
   return (
-    <>
+    <div className={`app-container ${!settings.darkTheme ? 'light-mode' : ''} ${!settings.animations ? 'no-animations' : ''}`}>
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -191,7 +227,7 @@ function App() {
 
       <main className="main-layout">
         {activeTab === 'dashboard' && !selectedTool && (
-          <div style={{ animation: 'fadeIn 0.5s ease' }}>
+          <div className="fade-in">
             <header className="header">
               <h1>{activeCategory === 'all' ? 'Dashboard' : CATEGORIES.find(c => c.id === activeCategory)?.name}</h1>
               <p>Explore {filteredTools.length} tools for your next project.</p>
@@ -205,6 +241,7 @@ function App() {
               ) : (
                 <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '5rem', color: 'var(--text-secondary)' }}>
                   <h3>No tools found matching "{searchQuery}"</h3>
+                  <button className="btn" style={{ width: 'auto', marginTop: '1rem' }} onClick={() => setSearchQuery('')}>Clear Search</button>
                 </div>
               )}
             </div>
@@ -212,7 +249,7 @@ function App() {
         )}
 
         {selectedTool && (
-          <div className="view-container" style={{ animation: 'fadeIn 0.4s ease' }}>
+          <div className="view-container fade-in">
             <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
               <button className="btn" onClick={() => setSelectedTool(null)} style={{ width: 'auto', background: 'rgba(255,255,255,0.1)' }}>← Back</button>
               <div style={{ fontSize: '1.5rem' }}>{selectedTool.icon}</div>
@@ -225,10 +262,10 @@ function App() {
           </div>
         )}
 
-        {activeTab === 'settings' && <Settings />}
-        {activeTab === 'about' && <About />}
+        {activeTab === 'settings' && <SettingsView settings={settings} setSettings={setSettings} />}
+        {activeTab === 'about' && <AboutView />}
       </main>
-    </>
+    </div>
   );
 }
 

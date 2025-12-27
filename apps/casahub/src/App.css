@@ -11,6 +11,15 @@
   }
 }
 
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+body.no-animations * {
+  animation: none !important;
+  transition: none !important;
+}
+
 .tool-grid>div {
   animation: fadeIn 0.6s ease forwards;
 }
@@ -56,9 +65,13 @@ pre {
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: white;
+  color: var(--text-primary);
   font-size: 0.9rem;
   transition: all 0.3s ease;
+}
+
+body.light-mode .search-input {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .search-input:focus {
@@ -92,12 +105,16 @@ pre {
 
 .category-item:hover {
   background: rgba(255, 255, 255, 0.05);
-  color: white;
+  color: var(--text-primary);
+}
+
+body.light-mode .category-item:hover {
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .category-item.active {
   background: var(--accent-color);
-  color: white;
+  color: white !important;
 }
 
 /* Settings & About Pages */
@@ -157,9 +174,13 @@ pre {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.2);
   transition: .4s;
   border-radius: 24px;
+}
+
+body.light-mode .slider {
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .slider:before {
@@ -172,6 +193,7 @@ pre {
   background-color: white;
   transition: .4s;
   border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 input:checked+.slider {
@@ -215,7 +237,7 @@ input:checked+.slider:before {
   border-radius: 20px;
   text-align: center;
   text-decoration: none;
-  color: white;
+  color: var(--text-primary);
   transition: var(--transition);
   border: 1px solid var(--border-color);
 }

@@ -4,6 +4,8 @@ import * as Misc from './tools/MiscTools';
 import * as NetMath from './tools/NetworkMathTools';
 import * as Adv from './tools/AdvancedTools';
 import * as Final from './tools/FinalTools';
+import * as Text from './tools/TextTools';
+import * as MathAdv from './tools/AdvancedMath';
 
 const ToolRenderer = ({ toolId }) => {
     switch (toolId) {
@@ -11,7 +13,7 @@ const ToolRenderer = ({ toolId }) => {
         case 'password-gen': return <Basic.PasswordGenerator />;
         case 'base64': return <Misc.Base64Tool />;
         case 'hash-gen': return <Basic.HashGenerator />;
-        case 'jwt-decoder': return <Adv.AdvancedTools />; // Handles both JWT/URL via internal toggle for now
+        case 'jwt-decoder': return <Adv.AdvancedTools toolId={toolId} />;
         case 'qr-gen': return <Final.QrGenerator />;
 
         // Dev
@@ -23,20 +25,20 @@ const ToolRenderer = ({ toolId }) => {
 
         // Network
         case 'network-info': return <NetMath.NetworkTools />;
-        case 'url-parser': return <Adv.AdvancedTools />; // Shared with JWT
+        case 'url-parser': return <Adv.AdvancedTools toolId={toolId} />;
 
         // Math
         case 'unit-converter': return <NetMath.UnitConverter />;
-        case 'sci-calculator': return <div>Advanced Calculator Coming Soon!</div>;
+        case 'sci-calculator': return <MathAdv.ScientificCalculator />;
         case 'percent-calc': return <NetMath.MathTools />;
         case 'aspect-ratio': return <NetMath.MathTools />;
 
         // Text
         case 'word-counter': return <Basic.WordCounter />;
         case 'lorem-ipsum': return <Basic.LoremIpsum />;
-        case 'case-converter': return <div>Case Converter Implementation...</div>;
-        case 'diff-viewer': return <div>Diff Viewer Implementation...</div>;
-        case 'md-preview': return <div>Markdown Previewer Implementation...</div>;
+        case 'case-converter': return <Text.CaseConverter />;
+        case 'diff-viewer': return <Text.DiffViewer />;
+        case 'md-preview': return <Text.MarkdownPreview />;
 
         // Utility
         case 'scratchpad': return <Adv.Scratchpad />;
@@ -45,7 +47,7 @@ const ToolRenderer = ({ toolId }) => {
         case 'pomodoro': return <Adv.Pomodoro />;
 
         default:
-            return <div>Tool component not found</div>;
+            return <div>Tool component not found: {toolId}</div>;
     }
 };
 
