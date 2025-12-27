@@ -1,0 +1,55 @@
+name: casahub
+services:
+  casahub:
+    image: ghcr.io/skyious/casaos-apps:latest
+    container_name: casahub
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - target: 80
+        published: ${WEBUI_PORT:-8080}
+        protocol: tcp
+    x-casaos:
+      envs:
+        - container: TZ
+          description:
+            en_us: TimeZone
+      ports:
+        - container: "80"
+          description:
+            en_us: WebUI HTTP Port
+      volumes: []
+
+x-casaos:
+  architectures:
+    - amd64
+    - arm64
+    - arm
+  main: casahub
+  author: SKYIOUS
+  category: Utilities
+  description:
+    en_us: |
+      # CasaHub: The Ultimate Utility Suite
+
+      CasaHub is a versatile, integrated tool suite designed to provide essential utilities within a single, elegant interface. 
+
+      ### Key Features:
+      - **Password Generator**: Create secure passwords on the fly.
+      - **JSON Formatter**: Prettify and validate JSON data.
+      - **Network Info**: Instantly check your public IP.
+      - **Unit Converter**: Quick conversions for temperature and distance.
+      - **Scratchpad**: A simple persistent note-taking tool.
+      - **Base64 Tool**: Easy encoding and decoding.
+
+      Stop cluttering your CasaOS dashboard with dozens of tiny apps. CasaHub brings them all together in one beautiful, glassmorphic UI.
+  tagline:
+    en_us: One app, dozens of essential tools.
+  title:
+    en_us: CasaHub
+  icon: https://raw.githubusercontent.com/SKYIOUS/SKYIOUS-CasaOS-AppStore/main/Apps/CasaHub/icon.png
+  screenshot_link:
+    - https://raw.githubusercontent.com/SKYIOUS/SKYIOUS-CasaOS-AppStore/main/Apps/CasaHub/screenshot-1.png
+  thumbnail: https://raw.githubusercontent.com/SKYIOUS/SKYIOUS-CasaOS-AppStore/main/Apps/CasaHub/thumbnail.png
+  port_map: ${WEBUI_PORT:-8080}
+  index: /
